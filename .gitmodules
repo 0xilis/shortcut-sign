@@ -1,0 +1,3 @@
+[submodule "lib/libshortcutsign"]
+	path = lib/libshortcutsign
+	url = https://github.com/0xilis/libshortcutsign.git
