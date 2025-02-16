@@ -3,11 +3,11 @@
 #include <string.h>
 #include <getopt.h>
 #include <libgen.h>
-#include "../lib/libshortcutsign/libshortcutsign.h"
+#include "../lib/libshortcutsign/xplat.h"
 
 #define OPTSTR "i:o:a:p:hv"
 
-typedef enum {,
+typedef enum {
     SS_CMD_SIGN,
     SS_CMD_EXTRACT,
     SS_CMD_VERIFY,
@@ -22,6 +22,7 @@ void show_help(void) {
     /* printf(" sign: sign an unsigned shortcut.\n"); */
     printf(" extract: extract unsigned shortcut from a signed shortcut.\n");
     /* printf(" verify: verify signature of signed shortcut.\n"); */
+    printf(" auth: extract auth data of shortcut\n");
     printf(" resign: resign a signed shortcut\n");
     printf(" version: display version of shortcut-sign\n");
     printf("\n");
@@ -51,7 +52,7 @@ int main(int argc, const char * argv[]) {
     } else if (strncmp(commandString, "resign", 6) == 0) {
         ssCommand = SS_CMD_RESIGN;
     } else if (strncmp(commandString, "version", 7) == 0) {
-        ssCommand = NEOAA_CMD_VERSION;
+        ssCommand = SS_CMD_VERSION;
     } else {
         printf("Invalid command.\n");
         show_help();
