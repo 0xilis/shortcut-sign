@@ -1,0 +1,37 @@
+name: Build Project
+
+on:
+  push:
+    branches:
+      - master  # Default branch
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest #maybe i should change this to arch idk, would do BSD but github actions no work there
+
+    steps:
+      # Step 1: Checkout the code from the repository
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Step 2: Initialize and update submodules
+      - name: Initialize submodules
+        run: |
+          git submodule update --init --recursive
+
+      # Step 3: Set up Clang
+      - name: Set up Clang
+        run: sudo apt-get install -y clang
+
+      # Step 4: Build the project using Makefile
+      - name: Build the project
+        run: |
+          make
+
+      # Step 5: Run tests (Not yet done and may decide not to do this)
+      # - name: Run tests
+      #   run: |
+      #     make test
