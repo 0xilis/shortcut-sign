@@ -3,7 +3,14 @@ CC = clang
 
 BUILD_DIR = ../../build/libshortcutsign
 
+LZFSE_DIR = lib/libshortcutsign/libs/lzfse
+BUILD_LZFSE_DIR = ../../build/lzfse
+
 output: $(buildDir)
+	@ # Build liblzfse submodule
+	@echo "building liblzfse..."
+	$(MAKE) -C $(LZFSE_DIR) install INSTALL_PREFIX=$(BUILD_LZFSE_DIR)
+
 	@ # Build libshortcutsign.a
 	@echo "building libshortcutsign..."
 	@$(CC) -c lib/libshortcutsign/xplat.c -o build/obj/xplat.o -Os
