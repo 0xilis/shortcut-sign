@@ -6,10 +6,16 @@ BUILD_DIR = ../../build/libshortcutsign
 LZFSE_DIR = lib/libshortcutsign/libs/lzfse
 BUILD_LZFSE_DIR = ../../build/lzfse
 
+NEOAPPLEARCHIVE_DIR = lib/libshortcutsign/libs/libNeoAppleArchive
+
 output: $(buildDir)
 	@ # Build liblzfse submodule
 	@echo "building liblzfse..."
 	$(MAKE) -C $(LZFSE_DIR) install INSTALL_PREFIX=$(BUILD_LZFSE_DIR)
+
+	@ # Build libNeoAppleArchive submodule
+	@echo "building libNeoAppleArchive..."
+	$(MAKE) -C $(NEOAPPLEARCHIVE_DIR)
 
 	@ # Build libshortcutsign.a
 	@echo "building libshortcutsign..."
