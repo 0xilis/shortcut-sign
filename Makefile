@@ -33,3 +33,4 @@ $(buildDir):
 	mkdir build/obj
 	mkdir build/libshortcutsign
 	mkdir build/lzfse
+	mkdir build/libNeoAppleArchive
