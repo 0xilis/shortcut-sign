@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest #maybe i should change this to arch idk, would do BSD but github actions no work there
+    runs-on: ubuntu-latest
 
     steps:
       # Step 1: Checkout the code from the repository
@@ -31,7 +31,41 @@ jobs:
         run: |
           make
 
-      # Step 5: Run tests (Not yet done and may decide not to do this)
-      # - name: Run tests
-      #   run: |
-      #     make test
+      # Step 5: Create a GitHub release (if one doesn't exist)
+      - name: Create GitHub Release
+        id: create_release
+        run: |
+          RELEASE_NAME="v$(date +'%Y%m%d%H%M%S')"  # Create a version name based on current timestamp
+          RELEASE_BODY="Automated release after successful build."
+          
+          # Create the release if it doesn't exist
+          RESPONSE=$(curl --request POST \
+            --url https://api.github.com/repos/${{ github.repository }}/releases \
+            --header "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            --header 'Content-Type: application/json' \
+            --data '{"tag_name": "'"$RELEASE_NAME"'", "name": "'"$RELEASE_NAME"'", "body": "'"$RELEASE_BODY"'"}')
+          
+          echo "Release response: $RESPONSE"
+          
+          # Extract the release ID for uploading the asset
+          RELEASE_ID=$(echo $RESPONSE | jq -r .id)
+          echo "Release ID: $RELEASE_ID"
+          echo "::set-output name=release_id::$RELEASE_ID"
+
+      # Step 6: Upload the built shortcut-sign binary to the release
+      - name: Upload shortcut-sign binary to GitHub Release
+        run: |
+          RELEASE_ID="${{ steps.create_release.outputs.release_id }}"
+          FILE_PATH="build/usr/bin/shortcut-sign"
+          FILE_NAME="shortcut-sign-$(date +'%Y%m%d%H%M%S')"
+          
+          echo "Uploading $FILE_PATH to release ID $RELEASE_ID..."
+          
+          curl -XPOST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Content-Type: application/octet-stream" \
+            --data-binary @$FILE_PATH \
+            "https://uploads.github.com/repos/${{ github.repository }}/releases/$RELEASE_ID/assets?name=$FILE_NAME"
+          
+        # Ensure the upload step only runs if the build step succeeded
+        if: success()
