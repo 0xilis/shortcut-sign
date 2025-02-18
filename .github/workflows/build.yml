@@ -30,12 +30,3 @@ jobs:
       - name: Build the project
         run: |
           make
-
-      # Step 5: Create and upload release using softprops/action-gh-release
-      - name: Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: build/usr/bin/shortcut-sign  # Adjust this to point to your built binary
-          tag_name: "v$(date +'%Y%m%d%H%M%S')"  # Use a timestamp as version tag (you can change it to your own versioning scheme)
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Ensure the token is set to push releases
