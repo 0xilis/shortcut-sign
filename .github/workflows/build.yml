@@ -24,7 +24,9 @@ jobs:
 
       # Step 3: Set up Clang
       - name: Set up Clang
-        run: sudo apt-get install -y clang
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang libplist-dev make
 
       # Step 4: Build the project using Makefile
       - name: Build the project
