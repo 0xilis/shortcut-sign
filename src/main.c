@@ -3,7 +3,8 @@
 #include <string.h>
 #include <getopt.h>
 #include <libgen.h>
-#include "../lib/libshortcutsign/xplat.h"
+#include "../lib/libshortcutsign/extract.h"
+#include "../lib/libshortcutsign/verify.h"
 
 #define OPTSTR "i:o:a:p:hv"
 
@@ -21,9 +22,9 @@ void show_help(void) {
     printf("Commands:\n\n");
     /* printf(" sign: sign an unsigned shortcut.\n"); */
     printf(" extract: extract unsigned shortcut from a signed shortcut.\n");
-    /* printf(" verify: verify signature of signed shortcut.\n"); */
+    printf(" verify: verify signature of signed shortcut. (currently only contact-signed)\n");
     printf(" auth: extract auth data of shortcut\n");
-    printf(" resign: resign a signed shortcut\n");
+    /* printf(" resign: resign a signed shortcut\n"); */
     printf(" version: display version of shortcut-sign\n");
     printf("\n");
     printf("Options:\n\n");
@@ -118,6 +119,12 @@ int main(int argc, const char * argv[]) {
         fwrite(authData, bufferSize, 1, fp);
         fclose(fp);
         free(authData);
+    } else if (SS_CMD_VERIFY == ssCommand) {
+        if (verify_contact_signed_shortcut(inputPath)) {
+            printf("Verification Successful\n");
+        } else {
+            printf("Verification Failed\n");
+        }
     }
     return 0;
 }

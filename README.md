@@ -12,6 +12,7 @@ Usage: shortcut-sign command <options>
 Commands:
 
  extract: extract unsigned shortcut from a signed shortcut.
+ verify: verify signature of signed shortcut. (currently only contact-signed)
  auth: extract auth data of shortcut
  version: display version of shortcut-sign
 
@@ -26,5 +27,4 @@ Options:
 # Future Commands
 
 - `sign`
-- `verify`
 - `resign`
