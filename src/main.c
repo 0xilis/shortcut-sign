@@ -133,7 +133,10 @@ int main(int argc, const char * argv[]) {
             printf("No -o specified.\n");
             return 0;
         }
-        extract_signed_shortcut(inputPath, outputPath);
+        if (extract_signed_shortcut(inputPath, outputPath)) {
+            printf("Extraction failed.\n");
+            return 0;
+        }
     } else if (SS_CMD_AUTH_EXTRACT == ssCommand) {
         if (!outputPath) {
             /* No outputPath specified, in the future try to print auth data then */
@@ -160,9 +163,9 @@ int main(int argc, const char * argv[]) {
         free(authData);
     } else if (SS_CMD_VERIFY == ssCommand) {
         if (verify_contact_signed_shortcut(inputPath)) {
-            printf("Verification Successful\n");
-        } else {
             printf("Verification Failed\n");
+        } else {
+            printf("Verification Successful\n");
         }
     } else if (SS_CMD_RESIGN == ssCommand) {
         if (!outputPath) {
@@ -188,11 +191,23 @@ int main(int argc, const char * argv[]) {
         } else {
             /* Extract unsigned AA from AEA (i need to add this to libshortcutsign) */
             appleArchive = ext_aa_from_aea(inputPath, &appleArchiveSize);
+            if (!appleArchive) {
+                printf("Apple Archive extraction failed.\n");
+                return 0;
+            }
         }
         uint8_t *aeaShortcutArchive = load_binary(inputPath);
+        if (!aeaShortcutArchive) {
+            printf("Failed to load input AEA.\n");
+            return 0;
+        }
         uint8_t *privateKey = load_binary(privateKeyPath);
+        if (!privateKey) {
+            printf("Failed to load private key.\n");
+            return 0;
+        }
         resign_shortcut_with_new_aa(aeaShortcutArchive, appleArchive, appleArchiveSize, outputPath, privateKey);
-        free(aeaShortcutArchive);
+        /* resign_shortcut_with_new_aa auto frees aeaShortcutArchive so we don't free it */
         free(privateKey);
         free(appleArchive);
     }

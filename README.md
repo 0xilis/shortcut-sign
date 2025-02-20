@@ -5,6 +5,11 @@ Heavily WIP. Build by doing `make` after using git to init the submodules.
 
 Note that GitHub actions *should* be automatically pushing to Release after build but it is not...
 
+# Dependencies
+
+- OpenSSL
+- libplist 2.0
+
 # CLI Usage
 ```
 Usage: shortcut-sign command <options>
