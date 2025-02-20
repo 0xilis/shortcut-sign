@@ -207,9 +207,8 @@ int main(int argc, const char * argv[]) {
             return 0;
         }
         resign_shortcut_with_new_aa(aeaShortcutArchive, appleArchive, appleArchiveSize, outputPath, privateKey);
-        /* resign_shortcut_with_new_aa auto frees aeaShortcutArchive so we don't free it */
+        /* resign_shortcut_with_new_aa auto frees aeaShortcutArchive & appleArchive so we don't free it */
         free(privateKey);
-        free(appleArchive);
     }
     return 0;
 }
