@@ -196,6 +196,7 @@ int main(int argc, const char * argv[]) {
                 return 0;
             }
         }
+
         uint8_t *aeaShortcutArchive = load_binary(inputPath);
         if (!aeaShortcutArchive) {
             printf("Failed to load input AEA.\n");
