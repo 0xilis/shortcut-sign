@@ -47,7 +47,8 @@ uint32_t get_aa_header_field_key(struct libshortcutsign_header_info info, uint32
 int aa_header_field_key_exists(struct libshortcutsign_header_info info, const char *key) {
     uint32_t key_ugly_hack = *(uint32_t *)&key;
     int keyCount = info.keyCount;
-    for (int i = 0; i < keyCount; i++) {
+    unsigned int i;
+    for (i = 0; i < keyCount; i++) {
         if (get_aa_header_field_key(info, i) == key_ugly_hack) {
             return 1;
         }
@@ -59,7 +60,8 @@ int aa_header_field_key_exists(struct libshortcutsign_header_info info, const ch
 int aa_header_field_key_index_by_name(struct libshortcutsign_header_info info, const char *key) {
     uint32_t key_ugly_hack = *(uint32_t *)&key;
     int keyCount = info.keyCount;
-    for (int i = 0; i < keyCount; i++) {
+    unsigned int i;
+    for (i = 0; i < keyCount; i++) {
         if (get_aa_header_field_key(info, i) == key_ugly_hack) {
             return i;
         }
