@@ -5,6 +5,7 @@
 #include <libgen.h>
 #include "../lib/libshortcutsign/extract.h"
 #include "../lib/libshortcutsign/verify.h"
+#include "../lib/libshortcutsign/sign.h"
 #include "apple_archive.h"
 
 #define OPTSTR "i:o:u:k:hv"
@@ -17,8 +18,6 @@ typedef enum {
     SS_CMD_RESIGN,
     SS_CMD_VERSION,
 } SSCommand;
-
-void resign_shortcut_with_new_aa(uint8_t *aeaShortcutArchive, void *archivedDir, size_t aeaShortcutArchiveSize, const char *outputPath, void *privateKey);
 
 void show_help(void) {
     printf("Usage: shortcut-sign command <options>\n\n");
@@ -207,9 +206,26 @@ int main(int argc, const char * argv[]) {
             printf("Failed to load private key.\n");
             return 0;
         }
-        resign_shortcut_with_new_aa(aeaShortcutArchive, appleArchive, appleArchiveSize, outputPath, privateKey);
-        /* resign_shortcut_with_new_aa auto frees aeaShortcutArchive & appleArchive so we don't free it */
+
+        size_t resignedSize = 0;
+        if (resign_shortcut_with_new_aa(aeaShortcutArchive, appleArchive, appleArchiveSize, &resignedSize, privateKey)) {
+            printf("Failed to resign shortcut with new aar.\n");
+            return -1;
+        }
+
+        /* resign_shortcut_with_new_aa auto frees appleArchive so we don't free it */
         free(privateKey);
+
+        /* Copy final resigned archive to outputPath */
+        FILE *fp = fopen(outputPath, "w");
+        if (!fp) {
+            free(aeaShortcutArchive);
+            printf("Failed to open outputPath.\n");
+            return -1;
+        }
+        fwrite(aeaShortcutArchive, resignedSize, 1, fp);
+        fclose(fp);
+        free(aeaShortcutArchive);
     }
     return 0;
 }
