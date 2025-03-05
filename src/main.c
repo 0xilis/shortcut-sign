@@ -37,7 +37,7 @@ void show_help(void) {
     printf("\n");
 }
 
-uint8_t *load_binary(const char *signedShortcutPath, size_t *binarySize) {
+__attribute__((visibility ("hidden"))) static uint8_t *load_binary(const char *signedShortcutPath, size_t *binarySize) {
     /* load AEA archive into memory */
     FILE *fp = fopen(signedShortcutPath,"r");
     if (!fp) {
@@ -47,7 +47,7 @@ uint8_t *load_binary(const char *signedShortcutPath, size_t *binarySize) {
     fseek(fp, 0, SEEK_END);
     size_t binary_size = ftell(fp);
     fseek(fp, 0, SEEK_SET);
-    uint8_t *aeaShortcutArchive = malloc(binary_size * sizeof(char));
+    uint8_t *aeaShortcutArchive = malloc(binary_size);
     /* copy bytes to binary, byte by byte... */
     int c;
     size_t n = 0;
@@ -62,6 +62,45 @@ uint8_t *load_binary(const char *signedShortcutPath, size_t *binarySize) {
     }
     if (binarySize) {
         *binarySize = binary_size;
+    }
+    return aeaShortcutArchive;
+}
+
+__attribute__((visibility ("hidden"))) static uint8_t *malloc_binaryForExpansion(const char *signedShortcutPath, size_t *binarySize, size_t extraSize) {   
+    /* load AEA archive into memory */
+    FILE *fp = fopen(signedShortcutPath,"r");
+    if (!fp) {
+        fprintf(stderr,"shortcut-sign: malloc_binaryForExpansion could not open path\n");
+        return 0;
+    }
+    fseek(fp, 0, SEEK_END);
+    size_t _binarySize = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+
+    /* Check for integer overflow */
+    size_t mallocSize = _binarySize + extraSize;
+    if (mallocSize < _binarySize || mallocSize < extraSize) {
+        fprintf(stderr,"shortcut-sign: malloc_binaryForExpansion overflowed size\n");
+        return 0;
+    }
+
+    uint8_t *aeaShortcutArchive = malloc(mallocSize);
+    /* 0 out all extra bytes we allocate, all after _binarySize */
+    memset(aeaShortcutArchive + _binarySize, 0, extraSize);
+    /* copy bytes to binary, byte by byte... */
+    int c;
+    size_t n = 0;
+    while ((c = fgetc(fp)) != EOF) {
+        aeaShortcutArchive[n++] = (char) c;
+    }
+    fclose(fp);
+    if (n != _binarySize) {
+        fprintf(stderr,"shortcut-sign: malloc_binaryForExpansion could not read entire file\n");
+        free(aeaShortcutArchive);
+        return 0;
+    }
+    if (binarySize) {
+        *binarySize = mallocSize;
     }
     return aeaShortcutArchive;
 }
@@ -201,7 +240,8 @@ int main(int argc, const char * argv[]) {
         }
 
         size_t aeaShortcutArchiveSize = 0;
-        uint8_t *aeaShortcutArchive = load_binary(inputPath, &aeaShortcutArchiveSize);
+        /* We are adding the unsigned plist to our malloc so we can expand this */
+        uint8_t *aeaShortcutArchive = malloc_binaryForExpansion(inputPath, &aeaShortcutArchiveSize, unsignedPlistSize);
         if (!aeaShortcutArchive) {
             printf("Failed to load input AEA.\n");
             return 0;
