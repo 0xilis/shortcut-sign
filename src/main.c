@@ -6,7 +6,6 @@
 #include "../lib/libshortcutsign/extract.h"
 #include "../lib/libshortcutsign/verify.h"
 #include "../lib/libshortcutsign/sign.h"
-#include "apple_archive.h"
 
 #define OPTSTR "i:o:u:k:hv"
 
@@ -38,7 +37,7 @@ void show_help(void) {
     printf("\n");
 }
 
-uint8_t *load_binary(const char *signedShortcutPath) {
+uint8_t *load_binary(const char *signedShortcutPath, size_t *binarySize) {
     /* load AEA archive into memory */
     FILE *fp = fopen(signedShortcutPath,"r");
     if (!fp) {
@@ -60,6 +59,9 @@ uint8_t *load_binary(const char *signedShortcutPath) {
         fprintf(stderr,"shortcut-sign: load_binary could not read entire file\n");
         free(aeaShortcutArchive);
         return 0;
+    }
+    if (binarySize) {
+        *binarySize = binary_size;
     }
     return aeaShortcutArchive;
 }
@@ -177,43 +179,46 @@ int main(int argc, const char * argv[]) {
             printf("No -k specified.\n");
             return 0;
         }
-        size_t appleArchiveSize = 0;
-        uint8_t *appleArchive;
+        size_t unsignedPlistSize = 0;
+        uint8_t *unsignedPlist;
         if (unsignedPath) {
             /* User specified unsigned shortcut to resign shortcut over */
-            /* Form Apple Archive and then resign */
-            appleArchive = create_shortcuts_apple_archive(unsignedPath, &appleArchiveSize);
-            if (!appleArchive) {
-                printf("Apple Archive creation failed.\n");
+            unsignedPlist = load_binary(unsignedPath, &unsignedPlistSize);
+            if (!unsignedPlist) {
+                printf("Failed to load unsigned plist.\n");
                 return 0;
             }
         } else {
             /* Extract unsigned AA from AEA (i need to add this to libshortcutsign) */
-            appleArchive = ext_aa_from_aea(inputPath, &appleArchiveSize);
-            if (!appleArchive) {
-                printf("Apple Archive extraction failed.\n");
+            size_t signedShortcutSize = 0;
+            uint8_t *signedShortcut = load_binary(inputPath, &signedShortcutSize);
+            unsignedPlist = extract_signed_shortcut_buffer(signedShortcut, signedShortcutSize, &unsignedPlistSize);
+            free(signedShortcut);
+            if (!unsignedPlist) {
+                printf("Unsigned plist extraction failed.\n");
                 return 0;
             }
         }
 
-        uint8_t *aeaShortcutArchive = load_binary(inputPath);
+        size_t aeaShortcutArchiveSize = 0;
+        uint8_t *aeaShortcutArchive = load_binary(inputPath, &aeaShortcutArchiveSize);
         if (!aeaShortcutArchive) {
             printf("Failed to load input AEA.\n");
             return 0;
         }
-        uint8_t *privateKey = load_binary(privateKeyPath);
+        uint8_t *privateKey = load_binary(privateKeyPath, 0);
         if (!privateKey) {
             printf("Failed to load private key.\n");
             return 0;
         }
 
         size_t resignedSize = 0;
-        if (resign_shortcut_with_new_aa(aeaShortcutArchive, appleArchive, appleArchiveSize, &resignedSize, privateKey)) {
-            printf("Failed to resign shortcut with new aar.\n");
+        if (resign_shortcut_with_new_plist(aeaShortcutArchive, unsignedPlist, unsignedPlistSize, &resignedSize, privateKey)) {
+            printf("Failed to resign shortcut with new plist.\n");
             return -1;
         }
 
-        /* resign_shortcut_with_new_aa auto frees appleArchive so we don't free it */
+        /* resign_shortcut_with_new_plist auto frees unsignedPlist so we don't free it */
         free(privateKey);
 
         /* Copy final resigned archive to outputPath */
