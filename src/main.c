@@ -5,7 +5,7 @@
 #include <libgen.h>
 #include "../lib/libshortcutsign/libshortcutsign.h"
 
-#define OPTSTR "i:o:u:k:hv"
+#define OPTSTR "i:o:u:k:a:hv"
 
 typedef enum {
     SS_CMD_SIGN,
@@ -256,7 +256,7 @@ int main(int argc, const char * argv[]) {
         }
 
         size_t resignedSize = 0;
-        if (resign_shortcut_with_new_plist(aeaShortcutArchive, unsignedPlist, unsignedPlistSize, &resignedSize, privateKey)) {
+        if (resign_shortcut_with_new_plist(&aeaShortcutArchive, unsignedPlist, unsignedPlistSize, &resignedSize, privateKey)) {
             printf("Failed to resign shortcut with new plist.\n");
             return -1;
         }
@@ -311,7 +311,7 @@ int main(int argc, const char * argv[]) {
             printf("Failed to load auth data.\n");
             return 0;
         }
-        uint8_t *privateKey = load_binary(privateKeyPath, &authDataSize);
+        uint8_t *privateKey = load_binary(privateKeyPath, 0);
         if (!privateKey) {
             printf("Failed to load private key.\n");
             return 0;
