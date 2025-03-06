@@ -3,9 +3,7 @@
 #include <string.h>
 #include <getopt.h>
 #include <libgen.h>
-#include "../lib/libshortcutsign/extract.h"
-#include "../lib/libshortcutsign/verify.h"
-#include "../lib/libshortcutsign/sign.h"
+#include "../lib/libshortcutsign/libshortcutsign.h"
 
 #define OPTSTR "i:o:u:k:hv"
 
@@ -21,7 +19,7 @@ typedef enum {
 void show_help(void) {
     printf("Usage: shortcut-sign command <options>\n\n");
     printf("Commands:\n\n");
-    /* printf(" sign: sign an unsigned shortcut.\n"); */
+    printf(" sign: sign an unsigned shortcut.\n");
     printf(" extract: extract unsigned shortcut from a signed shortcut.\n");
     printf(" verify: verify signature of signed shortcut. (currently only contact-signed)\n");
     printf(" auth: extract auth data of shortcut\n");
@@ -33,6 +31,8 @@ void show_help(void) {
     printf(" -o: path to the output file or directory.\n");
     printf(" -u: optional option for resign command, for signing over shortcut with unsigned shortcut.\n");
     printf(" -k: for signing/resigning, specify file containing ASN1 private ECDSA-P256 key\n");
+    printf(" -a: for signing, specify file containing auth data\n");
+    /* printf(" -q: for signing, specify QMC file instead of key/auth\n"); */
     printf(" -h: this ;-)\n");
     printf("\n");
 }
@@ -140,6 +140,7 @@ int main(int argc, const char * argv[]) {
     char *outputPath = NULL;
     char *unsignedPath = NULL;
     char *privateKeyPath = NULL;
+    char *authDataPath = NULL;
     
     /* Parse args */
     int opt;
@@ -152,6 +153,8 @@ int main(int argc, const char * argv[]) {
             unsignedPath = optarg;
         } else if (opt == 'k') {
             privateKeyPath = optarg;
+        } else if (opt == 'a') {
+            authDataPath = optarg;
         } else if (opt == 'h') {
             /* Show help */
             show_help();
@@ -271,6 +274,70 @@ int main(int argc, const char * argv[]) {
         fwrite(aeaShortcutArchive, resignedSize, 1, fp);
         fclose(fp);
         free(aeaShortcutArchive);
+    } else if (SS_CMD_SIGN == ssCommand) {
+        if (!outputPath) {
+            /* No outputPath specified */
+            printf("No -o specified.\n");
+            return 0;
+        }
+        if (!privateKeyPath) {
+            /* No privateKeyPath specified */
+            printf("No -k specified.\n");
+            return 0;
+        }
+        if (!authDataPath) {
+            /* No authDataPath specified */
+            printf("No -a specified.\n");
+            return 0;
+        }
+        size_t unsignedPlistSize = 0;
+        uint8_t *unsignedPlist;
+        if (unsignedPath) {
+            printf("Please specify the unsigned shortcut with -i and not -u; did you mean to use the resign command instead?\n");
+            return 0;
+        }
+        unsignedPlist = load_binary(inputPath, &unsignedPlistSize);
+        if (!unsignedPlist) {
+            printf("Failed to load unsigned plist.\n");
+            return 0;
+        }
+        if (get_shortcut_format(unsignedPlist, unsignedPlistSize) != SHORTCUT_UNSIGNED) {
+            printf("An already signed shortcut was passed into -i; did you mean to use the resign command instead?\n");
+            return 0;
+        }
+        size_t authDataSize = 0;
+        uint8_t *authData = load_binary(authDataPath, &authDataSize);
+        if (!authData) {
+            printf("Failed to load auth data.\n");
+            return 0;
+        }
+        uint8_t *privateKey = load_binary(privateKeyPath, &authDataSize);
+        if (!privateKey) {
+            printf("Failed to load private key.\n");
+            return 0;
+        }
+        
+        size_t signedShortcutSize = 0;
+        uint8_t *signedShortcut = sign_shortcut_with_private_key_and_auth_data(unsignedPlist, unsignedPlistSize, privateKey, authData, authDataSize, &signedShortcutSize);
+        if (!signedShortcut) {
+            printf("Failed to resign shortcut with new plist.\n");
+            return -1;
+        }
+
+        free(unsignedPlist);
+        free(privateKey);
+        free(authData);
+        
+        /* Copy signed shortcut to outputPath */
+        FILE *fp = fopen(outputPath, "w");
+        if (!fp) {
+            free(signedShortcut);
+            printf("Failed to open outputPath.\n");
+            return -1;
+        }
+        fwrite(signedShortcut, signedShortcutSize, 1, fp);
+        fclose(fp);
+        free(signedShortcut);
     }
     return 0;
 }
