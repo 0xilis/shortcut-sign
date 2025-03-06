@@ -30,6 +30,8 @@ Options:
 
 ```
 
+Note that this is in beta and some commands are pretty buggy. That being said, all commands are functional to some degree.
+
 # Dumping Auth Data / Private Keys
 
 1. Without disabling AMFI
@@ -101,15 +103,11 @@ Write functions to write dict and key variables to a file so you can have them d
 
 # Contributing
 
-Contributions are welcome! Not just to the code, but also better documentation would also be appreciated. If you have contributions for a 2nd party library such as libshortcutsign or libNeoAppleArchive, please report them in their github pages. If you can't think of what to contribute, you can check the TODO section for a list. Please keep in mind that the goal of shortcut-sign is to provide a **cross-platform** signing tool, so things specific to macOS/Linux are likely to not be accepted unless it is a need.
+Contributions are welcome! Not just to the code, but also better documentation would also be appreciated. If you have contributions for a 2nd party library such as libshortcutsign or libNeoAppleArchive, please report them in their github pages. If you can't think of what to contribute, you can check the TODO section for a list. Please keep in mind that the goal of shortcut-sign is to provide a **cross-platform** signing tool, so things specific to macOS and not working on Linux are likely to not be accepted unless it is a need.
 
 ### Contributing (TODO):
 
 - Write tests
-- Write a `sign` command
-- Support keys/auth data in qmc/qmd files as well
-- Rewrite apple_archive.c to use libNeoAppleArchive rather than providing own aar parsing
-
-# Future Commands
-
-- `sign`
+- Write a private key and auth data extractor for jailbroken iOS devices
+- Build CLI for more devices
+- Option to replicate identity services and fetch private key/cert/validation record over HTTPS from Apple ID, thus not requiring an Apple device to dump keys from. This is the most ambitious and will take the most time, and may not be done.
