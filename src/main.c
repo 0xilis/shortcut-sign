@@ -5,7 +5,7 @@
 #include <libgen.h>
 #include "../lib/libshortcutsign/libshortcutsign.h"
 
-#define OPTSTR "i:o:u:k:a:hv"
+#define OPTSTR "i:o:u:k:a:hvr"
 
 typedef enum {
     SS_CMD_SIGN,
@@ -32,6 +32,7 @@ void show_help(void) {
     printf(" -u: optional option for resign command, for signing over shortcut with unsigned shortcut.\n");
     printf(" -k: for signing/resigning, specify file containing ASN1 private ECDSA-P256 key\n");
     printf(" -a: for signing, specify file containing auth data\n");
+    printf(" -r/-raw_aar: flag to specify extracting the raw aar or sign raw aar data instead of plist\n");
     /* printf(" -q: for signing, specify QMC file instead of key/auth\n"); */
     printf(" -h: this ;-)\n");
     printf("\n");
@@ -132,6 +133,21 @@ int main(int argc, const char * argv[]) {
         show_help();
         return 0;
     }
+    int rawAarFlag = 0;
+    unsigned int i = 0;
+    for (i = 0; i < argc; i++) {
+        if (strcmp(argv[i], "-raw_aar") == 0) {
+            rawAarFlag = 1;
+            /* Remove it from argv by shifting elements to the left */
+            int j = i;
+            for (j = i; j < argc; j++) {
+                argv[j] = argv[j + 1];
+            }
+            /* Adjust argc because we removed an element from argv */
+            argc--;
+            break;
+        }
+    }
     /* Hack to get getopt() to skip the command in argv */
     argv++;
     argc--;
@@ -155,6 +171,8 @@ int main(int argc, const char * argv[]) {
             privateKeyPath = optarg;
         } else if (opt == 'a') {
             authDataPath = optarg;
+        } else if (opt == 'r') {
+            rawAarFlag = 1;
         } else if (opt == 'h') {
             /* Show help */
             show_help();
@@ -174,6 +192,29 @@ int main(int argc, const char * argv[]) {
     if (SS_CMD_EXTRACT == ssCommand) {
         if (!outputPath) {
             printf("No -o specified.\n");
+            return 0;
+        }
+        if (rawAarFlag) {
+            /* Not normal extraction; extract raw data (aar) */
+            size_t signedShortcutSize = 0;
+            uint8_t *signedShortcut = load_binary(inputPath, &signedShortcutSize);
+            if (!signedShortcut) {
+                printf("Failed to load input\n");
+                return 0;
+            }
+            size_t aarSize = 0;
+            uint8_t *aar = extract_signed_shortcut_buffer_aar(signedShortcut, signedShortcutSize, &aarSize);
+            if (!aar) {
+                printf("Failed to extract aar buffer\n");
+                return 0;
+            }
+            FILE *fp = fopen(outputPath, "wb");
+            if (!fp) {
+                printf("Failed to open output file.\n");
+                return 0;
+            }
+            fwrite(aar, aarSize, 1, fp);
+            fclose(fp);
             return 0;
         }
         if (extract_signed_shortcut(inputPath, outputPath)) {
@@ -231,6 +272,10 @@ int main(int argc, const char * argv[]) {
                 return 0;
             }
         } else {
+            if (rawAarFlag) {
+                printf("-r/-raw_aar flag specified, but no -u for resigning\n");
+                return 0;
+            }
             /* Extract unsigned AA from AEA (i need to add this to libshortcutsign) */
             size_t signedShortcutSize = 0;
             uint8_t *signedShortcut = load_binary(inputPath, &signedShortcutSize);
@@ -256,9 +301,16 @@ int main(int argc, const char * argv[]) {
         }
 
         size_t resignedSize = 0;
-        if (resign_shortcut_with_new_plist(&aeaShortcutArchive, unsignedPlist, unsignedPlistSize, &resignedSize, privateKey)) {
-            printf("Failed to resign shortcut with new plist.\n");
-            return -1;
+        if (rawAarFlag) {
+            if (resign_shortcut_with_new_aa(&aeaShortcutArchive, unsignedPlist, unsignedPlistSize, &resignedSize, privateKey)) {
+                printf("Failed to resign shortcut with new plist.\n");
+                return -1;
+            }
+        } else {
+            if (resign_shortcut_with_new_plist(&aeaShortcutArchive, unsignedPlist, unsignedPlistSize, &resignedSize, privateKey)) {
+                printf("Failed to resign shortcut with new plist.\n");
+                return -1;
+            }
         }
 
         /* resign_shortcut_with_new_plist auto frees unsignedPlist so we don't free it */
@@ -301,9 +353,11 @@ int main(int argc, const char * argv[]) {
             printf("Failed to load unsigned plist.\n");
             return 0;
         }
-        if (get_shortcut_format(unsignedPlist, unsignedPlistSize) != SHORTCUT_UNSIGNED) {
-            printf("An already signed shortcut was passed into -i; did you mean to use the resign command instead?\n");
-            return 0;
+        if (!rawAarFlag) {
+            if (get_shortcut_format(unsignedPlist, unsignedPlistSize) != SHORTCUT_UNSIGNED) {
+                printf("An already signed shortcut was passed into -i; did you mean to use the resign command instead?\n");
+                return 0;
+            }
         }
         size_t authDataSize = 0;
         uint8_t *authData = load_binary(authDataPath, &authDataSize);
@@ -318,7 +372,12 @@ int main(int argc, const char * argv[]) {
         }
         
         size_t signedShortcutSize = 0;
-        uint8_t *signedShortcut = sign_shortcut_with_private_key_and_auth_data(unsignedPlist, unsignedPlistSize, privateKey, authData, authDataSize, &signedShortcutSize);
+        uint8_t *signedShortcut;
+        if (rawAarFlag) {
+            signedShortcut = sign_shortcut_aar_with_private_key_and_auth_data(unsignedPlist, unsignedPlistSize, privateKey, authData, authDataSize, &signedShortcutSize);
+        } else {
+            signedShortcut = sign_shortcut_with_private_key_and_auth_data(unsignedPlist, unsignedPlistSize, privateKey, authData, authDataSize, &signedShortcutSize);
+        }
         if (!signedShortcut) {
             printf("Failed to resign shortcut with new plist.\n");
             return -1;
