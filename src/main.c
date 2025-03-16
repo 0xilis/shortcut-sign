@@ -383,7 +383,6 @@ int main(int argc, const char * argv[]) {
             return -1;
         }
 
-        free(unsignedPlist);
         free(privateKey);
         free(authData);
         
