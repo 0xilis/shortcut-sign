@@ -182,7 +182,7 @@ int main(int argc, const char * argv[]) {
 
     /* SS_CMD_VERSION is the only command where inputPath is not needed */
     if (SS_CMD_VERSION == ssCommand) {
-        printf("1.0 Beta 1\n");
+        printf("1.0 Beta 4\n");
         return 0;
     }
     if (!inputPath) {
@@ -246,7 +246,7 @@ int main(int argc, const char * argv[]) {
         fclose(fp);
         free(authData);
     } else if (SS_CMD_VERIFY == ssCommand) {
-        if (verify_contact_signed_shortcut(inputPath)) {
+        if (verify_signed_shortcut(inputPath)) {
             printf("Verification Failed\n");
         } else {
             printf("Verification Successful\n");
