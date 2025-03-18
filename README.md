@@ -36,7 +36,11 @@ Note that this is in beta and some commands are pretty buggy. That being said, a
 
 # Dumping Auth Data / Private Keys
 
-1. Without disabling AMFI
+1. Jailbroken iOS Device / Disabling AMFI
+
+[https://github.com/0xilis/appleid-key-dumper](https://github.com/0xilis/appleid-key-dumper) features a CLI for jailbreak iOS devices to dump the Apple ID keys and Auth Data from your device. If you want to dump them from an AMFI-disabled Mac, by modifying the hardcoded path in main.m as well as making a new Makefile, you can compile it and dump the keys.
+
+2. Without disabling AMFI
 
 For some reason, you can hook Shortcuts in the simulator to dump the auth data and private keys without needing to disable AMFI.
 
@@ -50,57 +54,6 @@ Use [QMCDumper-Simulator](https://github.com/0xilis/QMCDumper-Simulator) to dump
 | 0x8+privateKeyLen | auth_data_size | Auth Data |
 
 After hooking simulator with QMCDumper-Simulator, try and make Shortcuts call the Apple ID signing function within simulator.
-
-2. Disabling AMFI
-
-Here is example code of generating the private key and auth data:
-
-```objc
-//Initialize the SFAppleIDAccount (Sharing.framework)
-SFAppleIDAccount *account = [[[SFAppleIDClient alloc]init]myAccountWithError:&err];
-//Get the SFAppleIDIdentity from it
-SFAppleIDIdentity *identity = [account identity];
-// Get the certificates from that identity
-OpaqueSecCertificateRef cert = [[account identity]copyCertificate];
-OpaqueSecCertificateRef intercert = [[account identity]copyIntermediateCertificate];
-// Get private key from Apple ID. This will be used to sign a public key that we will randomly generate.
-OpaqueSecKeyRef privateKey = [identity copyPrivateKey];
-// Generate an ECDSA-P256 key
-NSMutableDictionary *mutableDict = [NSMutableDictionary dictionary];
-mutableDict[(__bridge id)kSecAttrKeyType] = (__bridge id)kSecAttrKeyTypeECSECPrimeRandom;
-mutableDict[(__bridge id)kSecAttrKeySizeInBits] = @256;
-mutableDict[(__bridge id)kSecAttrIsPermanent] = @NO;
-SecKeyRef key = SecKeyCreateRandomKey((__bridge CFDictionaryRef)mutableDict, 0);
-// Get public key
-SecKeyRef pubKey = SecKeyCopyPublicKey(key);
-// Sign it with the Apple ID private key
-CFDataRef data = SecKeyCopyExternalRepresentation(pubKey);
-NSData *signature = (__bridge NSData *)SecKeyCreateSignature(privateKey, kSecKeyAlgorithmRSASignatureMessagePSSSHA256, data, 0);
-// Generate auth data
-dict = [NSMutableDictionary dictionaryWithDictionary:@{
-                @"AppleIDCertificateChain" : @{
-(__bridge NSData*)SecCertificateCopyData(cert),
-(__bridge NSData*)SecCertificateCopyData(intercert),
- },
-                @"SigningPublicKey" : pubKey,
-                @"SigningPublicKeySignature" : signature,
-                @"AppleIDValidationRecord" : [account validationRecord],
-            }];
-```
-
-Write functions to write dict and key variables to a file so you can have them dumped. Then, sign your binary with this entitlement plist:
-
-```
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-	<key>keychain-access-groups</key>
-	<array>
-		<string>com.apple.sharing.appleidauthentication</string>
-	</array>
-</dict>
-</plist>
 ```
 
 # Contributing
@@ -109,6 +62,7 @@ Contributions are welcome! Not just to the code, but also better documentation w
 
 ### Contributing (TODO):
 
+- Make a command to display info about signed shortcut, ex every certificate name in auth data, iCloud ID of iCloud-signed shortcuts, etc.
 - Write tests
 - Write a private key and auth data extractor for jailbroken iOS devices
 - Build CLI for more devices
