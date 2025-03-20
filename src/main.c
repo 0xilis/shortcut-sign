@@ -64,7 +64,7 @@ __attribute__((visibility ("hidden"))) static uint8_t *load_binary(const char *s
 
 __attribute__((visibility ("hidden"))) static uint8_t *malloc_binaryForExpansion(const char *signedShortcutPath, size_t *binarySize, size_t extraSize) {   
     /* load AEA archive into memory */
-    FILE *fp = fopen(signedShortcutPath,"r");
+    FILE *fp = fopen(signedShortcutPath,"rb");
     if (!fp) {
         fprintf(stderr,"shortcut-sign: malloc_binaryForExpansion could not open path\n");
         return 0;
