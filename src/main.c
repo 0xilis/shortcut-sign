@@ -40,29 +40,24 @@ void show_help(void) {
 
 __attribute__((visibility ("hidden"))) static uint8_t *load_binary(const char *signedShortcutPath, size_t *binarySize) {
     /* load AEA archive into memory */
-    FILE *fp = fopen(signedShortcutPath,"r");
+    FILE *fp = fopen(signedShortcutPath,"rb");
     if (!fp) {
         fprintf(stderr,"shortcut-sign: load_binary could not open path\n");
         return 0;
     }
     fseek(fp, 0, SEEK_END);
-    size_t binary_size = ftell(fp);
+    size_t _binarySize = ftell(fp);
     fseek(fp, 0, SEEK_SET);
-    uint8_t *aeaShortcutArchive = malloc(binary_size);
-    /* copy bytes to binary, byte by byte... */
-    int c;
-    size_t n = 0;
-    while ((c = fgetc(fp)) != EOF) {
-        aeaShortcutArchive[n++] = (char) c;
-    }
+    uint8_t *aeaShortcutArchive = malloc(_binarySize);
+    size_t n = fread(aeaShortcutArchive, 1, _binarySize, fp);
     fclose(fp);
-    if (n != binary_size) {
+    if (n != _binarySize) {
         fprintf(stderr,"shortcut-sign: load_binary could not read entire file\n");
         free(aeaShortcutArchive);
         return 0;
     }
-    if (binarySize) {
-        *binarySize = binary_size;
+    if (_binarySize) {
+        *binarySize = _binarySize;
     }
     return aeaShortcutArchive;
 }
@@ -88,12 +83,7 @@ __attribute__((visibility ("hidden"))) static uint8_t *malloc_binaryForExpansion
     uint8_t *aeaShortcutArchive = malloc(mallocSize);
     /* 0 out all extra bytes we allocate, all after _binarySize */
     memset(aeaShortcutArchive + _binarySize, 0, extraSize);
-    /* copy bytes to binary, byte by byte... */
-    int c;
-    size_t n = 0;
-    while ((c = fgetc(fp)) != EOF) {
-        aeaShortcutArchive[n++] = (char) c;
-    }
+    size_t n = fread(aeaShortcutArchive, 1, _binarySize, fp);
     fclose(fp);
     if (n != _binarySize) {
         fprintf(stderr,"shortcut-sign: malloc_binaryForExpansion could not read entire file\n");
