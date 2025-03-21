@@ -14,6 +14,7 @@ typedef enum {
     SS_CMD_AUTH_EXTRACT,
     SS_CMD_RESIGN,
     SS_CMD_VERSION,
+    SS_CMD_INFO,
 } SSCommand;
 
 void show_help(void) {
@@ -24,6 +25,7 @@ void show_help(void) {
     printf(" verify: verify signature of signed shortcut. (currently only contact-signed)\n");
     printf(" auth: extract auth data of shortcut\n");
     printf(" resign: resign a signed shortcut\n");
+    printf(" info: log info about signed shortcut's signing chain\n");
     printf(" version: display version of shortcut-sign\n");
     printf("\n");
     printf("Options:\n\n");
@@ -118,6 +120,8 @@ int main(int argc, const char * argv[]) {
         ssCommand = SS_CMD_RESIGN;
     } else if (strncmp(commandString, "version", 7) == 0) {
         ssCommand = SS_CMD_VERSION;
+    } else if (strncmp(commandString, "info", 4) == 0) {
+        ssCommand = SS_CMD_INFO;
     } else {
         printf("Invalid command.\n");
         show_help();
@@ -386,6 +390,14 @@ int main(int argc, const char * argv[]) {
         fwrite(signedShortcut, signedShortcutSize, 1, fp);
         fclose(fp);
         free(signedShortcut);
+    } else if (SS_CMD_INFO == ssCommand) {
+        size_t signedShortcutSize;
+        uint8_t *signedShortcut = load_binary(inputPath, &signedShortcutSize);
+        if (!signedShortcut) {
+            printf("Failed to load unsigned plist.\n");
+            return 0;
+        }
+        print_shortcut_cert_info(signedShortcut, signedShortcutSize);
     }
     return 0;
 }

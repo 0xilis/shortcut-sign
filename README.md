@@ -19,6 +19,7 @@ Commands:
  verify: verify signature of signed shortcut. (currently only contact-signed)
  auth: extract auth data of shortcut
  resign: resign a signed shortcut
+ info: log info about signed shortcut's signing chain
  version: display version of shortcut-sign
 
 Options:
@@ -28,6 +29,7 @@ Options:
  -u: optional option for resign command, for signing over shortcut with unsigned shortcut.
  -k: for signing/resigning, specify file containing ASN1 private ECDSA-P256 key
  -a: for signing, specify file containing auth data
+ -r/-raw_aar: flag to specify extracting the raw aar or sign raw aar data instead of plist
  -h: this ;-)
 
 ```
