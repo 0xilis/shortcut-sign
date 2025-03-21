@@ -3,7 +3,7 @@
 #include <string.h>
 #include <getopt.h>
 #include <libgen.h>
-#include "../lib/libshortcutsign/libshortcutsign.h"
+#include <libshortcutsign.h>
 
 #define OPTSTR "i:o:u:k:a:hvr"
 

@@ -1,39 +1,23 @@
 buildDir = build
 CC = clang
-CFLAGS = -Os -std=c89 -Ibuild/lzfse/include -Ibuild/libzbitmap/include
+CFLAGS = -Os -std=c89 -Ibuild/lzfse/include -Ibuild/libzbitmap/include -Ilib/libshortcutsign
 
-BUILD_DIR = ../../build/libshortcutsign
-
-LZFSE_DIR = lib/libshortcutsign/libs/lzfse
-BUILD_LZFSE_DIR = ../../build/lzfse
-
-NEOAPPLEARCHIVE_DIR = lib/libshortcutsign/libs/libNeoAppleArchive
+LIBSHORTCUTSIGN_DIR = lib/libshortcutsign
 
 output: $(buildDir)
-	@ # Build liblzfse submodule
-	@echo "building liblzfse..."
-	$(MAKE) -C $(LZFSE_DIR) install INSTALL_PREFIX=$(BUILD_LZFSE_DIR)
-
-	@ # Build libNeoAppleArchive submodule
-	@echo "building libNeoAppleArchive..."
-	$(MAKE) -C $(NEOAPPLEARCHIVE_DIR)
-
-	@ # Build libshortcutsign.a
+	@ # Build libshortcutsign
 	@echo "building libshortcutsign..."
-	@$(CC) -c lib/libshortcutsign/extract.c -o build/obj/extract.o $(CFLAGS)
-	@$(CC) -c lib/libshortcutsign/sign.c -o build/obj/sign.o $(CFLAGS)
-	@$(CC) -c lib/libshortcutsign/verify.c -o build/obj/verify.o $(CFLAGS)
-	@$(CC) -c lib/libshortcutsign/res.c -o build/obj/res.o $(CFLAGS)
-	@ar rcs build/usr/lib/libshortcutsign.a build/obj/*.o
+	$(MAKE) -C $(LIBSHORTCUTSIGN_DIR)
+
 	@ # Build shortcut-sign CLI tool
 	@echo "building shortcut-sign..."
-	@$(CC) src/*.c build/usr/lib/libshortcutsign.a -Llib/libshortcutsign/build/lzfse/lib -Llib/libshortcutsign/libs/libNeoAppleArchive/build/libzbitmap/lib -Llib/libshortcutsign/libs/libNeoAppleArchive/build/usr/lib -o build/usr/bin/shortcut-sign -llzfse -lNeoAppleArchive -lzbitmap -lz -lssl -lcrypto -lplist-2.0 $(CFLAGS)
+	@$(CC) src/*.c lib/libshortcutsign/build/usr/lib/libshortcutsign.a -Llib/libshortcutsign/build/lzfse/lib -Llib/libshortcutsign/libs/libNeoAppleArchive/build/libzbitmap/lib -Llib/libshortcutsign/libs/libNeoAppleArchive/build/usr/lib -o build/usr/bin/shortcut-sign -llzfse -lNeoAppleArchive -lzbitmap -lz -lssl -lcrypto -lplist-2.0 $(CFLAGS)
 
 $(buildDir):
 	@echo "Creating Build Directory"
 	mkdir -p build/usr/lib
-	mkdir build/usr/bin
-	mkdir build/obj
-	mkdir build/libshortcutsign
-	mkdir build/lzfse
-	mkdir build/libNeoAppleArchive
+	mkdir -p build/usr/bin
+	mkdir -p build/obj
+	mkdir -p build/libshortcutsign
+	mkdir -p build/lzfse
+	mkdir -p build/libNeoAppleArchive
