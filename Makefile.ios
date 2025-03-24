@@ -1,0 +1,17 @@
+ARCHS = arm64
+TARGET := iphone:clang:latest:6.0
+# PREFIX = $(THEOS)/toolchain/Xcode.xctoolchain/usr/bin/
+PREFIX = /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/
+SYSROOT = $(THEOS)/sdks/iPhoneOS14.4.sdk
+
+include $(THEOS)/makefiles/common.mk
+
+TOOL_NAME = shortcut-sign
+
+shortcut-sign_FILES = src/main.c $(wildcard lib/libshortcutsign/*.c) $(wildcard lib/libshortcutsign/libs/libNeoAppleArchive/libNeoAppleArchive/*.c) $(filter-out lib/libshortcutsign/libs/lzfse/src/lzfse_main.c, $(wildcard lib/libshortcutsign/libs/lzfse/src/*.c)) lib/libshortcutsign/libs/libNeoAppleArchive/libNeoAppleArchive/compression/libzbitmap/libzbitmap.c
+shortcut-sign_LIBRARIES = plist-2.0.3
+shortcut-sign_CFLAGS = -Ilib/libshortcutsign -Ilib/libshortcutsign/libs/libNeoAppleArchive/libNeoAppleArchive -Ilib/libshortcutsign/libs/libNeoAppleArchive/libNeoAppleArchive/compression/libzbitmap -Ilib/libshortcutsign/libs/libNeoAppleArchive/libNeoAppleArchive/compression/lzfse/src -Iios-support/ -DOPENSSL_API_COMPAT=30400 -Wno-missing-declarations
+shortcut-sign_LDFLAGS = -L./ios-support/ -lz -lssl -lcrypto
+shortcut-sign_INSTALL_PATH = /usr/local/bin
+
+include $(THEOS_MAKE_PATH)/tool.mk

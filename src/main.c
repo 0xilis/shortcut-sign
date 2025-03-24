@@ -176,7 +176,7 @@ int main(int argc, const char * argv[]) {
 
     /* SS_CMD_VERSION is the only command where inputPath is not needed */
     if (SS_CMD_VERSION == ssCommand) {
-        printf("1.0 Beta 4\n");
+        printf("1.0 Beta 3\n");
         return 0;
     }
     if (!inputPath) {
