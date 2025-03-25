@@ -53,10 +53,9 @@ Use [QMCDumper-Simulator](https://github.com/0xilis/QMCDumper-Simulator) to dump
 | 0x0 | 4 | QMD magic (always "QMD" followed by a null byte) |
 | 0x4 | 4 | privateKeyLen (length of private key) |
 | 0x8 | privateKeyLen | Private ECDSA-P256 key |
-| 0x8+privateKeyLen | auth_data_size | Auth Data |
+| 0x8+privateKeyLen | authDataSize | Auth Data |
 
 After hooking simulator with QMCDumper-Simulator, try and make Shortcuts call the Apple ID signing function within simulator.
-```
 
 # Contributing
 
