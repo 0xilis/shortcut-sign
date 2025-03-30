@@ -2,6 +2,12 @@ buildDir = build
 CC = clang
 CFLAGS = -Os -std=c89 -Ibuild/lzfse/include -Ibuild/libzbitmap/include -Ilib/libshortcutsign
 
+DEBUG ?= 0
+
+ifeq ($(DEBUG), 1)
+  CFLAGS += -g -fsanitize=address
+endif
+
 LIBSHORTCUTSIGN_DIR = lib/libshortcutsign
 
 output: $(buildDir)
