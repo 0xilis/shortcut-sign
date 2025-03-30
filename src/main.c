@@ -7,6 +7,17 @@
 
 #define OPTSTR "i:o:u:k:a:hvr"
 
+struct option long_options[] = {
+    {"input", required_argument, NULL, 'i'},
+    {"output", required_argument, NULL, 'o'},
+    {"unsigned", required_argument, NULL, 'u'},
+    {"key", required_argument, NULL, 'k'},
+    {"auth", required_argument, NULL, 'a'},
+    {"raw_aar", no_argument, NULL, 'r'},
+    {"help", no_argument, NULL, 'h'},
+    {NULL, 0, NULL, 0}
+};
+
 typedef enum {
     SS_CMD_SIGN,
     SS_CMD_EXTRACT,
@@ -130,7 +141,7 @@ int main(int argc, const char * argv[]) {
     int rawAarFlag = 0;
     unsigned int i = 0;
     for (i = 0; i < argc; i++) {
-        if (strcmp(argv[i], "-raw_aar") == 0) {
+        if (strncmp(argv[i], "-raw_aar", 8) == 0) {
             rawAarFlag = 1;
             /* Remove it from argv by shifting elements to the left */
             int j = i;
@@ -142,7 +153,7 @@ int main(int argc, const char * argv[]) {
             break;
         }
     }
-    /* Hack to get getopt() to skip the command in argv */
+    /* Hack to get getopt_long() to skip the command in argv */
     argv++;
     argc--;
 
@@ -154,7 +165,7 @@ int main(int argc, const char * argv[]) {
     
     /* Parse args */
     int opt;
-    while ((opt = getopt(argc, (char* const *)argv, OPTSTR)) != EOF) {
+    while ((opt = getopt_long(argc, (char* const *)argv, OPTSTR, long_options, NULL)) != -1) {
         if (opt == 'i') {
             inputPath = optarg;
         } else if (opt == 'o') {
