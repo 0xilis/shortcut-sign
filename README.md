@@ -14,9 +14,9 @@ Usage: shortcut-sign command <options>
 
 Commands:
 
- sign: sign an unsigned shortcut.
- extract: extract unsigned shortcut from a signed shortcut.
- verify: verify signature of signed shortcut. (currently only contact-signed)
+ sign: sign an unsigned shortcut
+ extract: extract unsigned shortcut from a signed shortcut
+ verify: verify signature of signed shortcut
  auth: extract auth data of shortcut
  resign: resign a signed shortcut
  info: log info about signed shortcut's signing chain
@@ -24,9 +24,9 @@ Commands:
 
 Options:
 
- -i: path to the input file or directory.
- -o: path to the output file or directory.
- -u: optional option for resign command, for signing over shortcut with unsigned shortcut.
+ -i: path to the input file or directory
+ -o: path to the output file or directory
+ -u: optional option for resign command, for signing over shortcut with unsigned shortcut
  -k: for signing/resigning, specify file containing ASN1 private ECDSA-P256 key
  -a: for signing, specify file containing auth data
  -r/-raw_aar: flag to specify extracting the raw aar or sign raw aar data instead of plist

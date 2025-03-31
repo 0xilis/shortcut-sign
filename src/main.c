@@ -131,6 +131,10 @@ int main(int argc, const char * argv[]) {
         ssCommand = SS_CMD_RESIGN;
     } else if (strncmp(commandString, "version", 7) == 0) {
         ssCommand = SS_CMD_VERSION;
+    } else if (strncmp(commandString, "-version", 8) == 0) {
+        ssCommand = SS_CMD_VERSION;
+    } else if (strncmp(commandString, "--version", 9) == 0) {
+        ssCommand = SS_CMD_VERSION;
     } else if (strncmp(commandString, "info", 4) == 0) {
         ssCommand = SS_CMD_INFO;
     } else {
