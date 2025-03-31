@@ -17,7 +17,7 @@ output: $(buildDir)
 
 	@ # Build shortcut-sign CLI tool
 	@echo "building shortcut-sign..."
-	@$(CC) src/*.c lib/libshortcutsign/build/usr/lib/libshortcutsign.a -Llib/libshortcutsign/build/lzfse/lib -Llib/libshortcutsign/libs/libNeoAppleArchive/build/libzbitmap/lib -Llib/libshortcutsign/libs/libNeoAppleArchive/build/usr/lib -o build/usr/bin/shortcut-sign -llzfse -lNeoAppleArchive -lzbitmap -lz -lssl -lcrypto -lplist-2.0 $(CFLAGS)
+	@$(CC) src/*.c lib/libshortcutsign/build/usr/lib/libshortcutsign.a -Llib/libshortcutsign/build/lzfse/lib -Llib/libshortcutsign/libs/libNeoAppleArchive/build/libzbitmap/lib -Llib/libshortcutsign/libs/libNeoAppleArchive/build/usr/lib -o build/usr/bin/shortcut-sign -lNeoAppleArchive -llzfse -lzbitmap -lz -lssl -lcrypto -lplist-2.0 $(CFLAGS)
 
 $(buildDir):
 	@echo "Creating Build Directory"
