@@ -4,3 +4,4 @@
 lib/libqmc/
 packages/
 .theos/
+ignore/

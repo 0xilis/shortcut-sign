@@ -137,6 +137,15 @@ int main(int argc, const char * argv[]) {
         ssCommand = SS_CMD_VERSION;
     } else if (strncmp(commandString, "info", 4) == 0) {
         ssCommand = SS_CMD_INFO;
+    } else if (strncmp(commandString, "-h", 2) == 0) {
+        show_help();
+        return 0;
+    } else if (strncmp(commandString, "help", 4) == 0) {
+        show_help();
+        return 0;
+    } else if (strncmp(commandString, "--help", 6) == 0) {
+        show_help();
+        return 0;
     } else {
         printf("Invalid command.\n");
         show_help();
@@ -166,6 +175,7 @@ int main(int argc, const char * argv[]) {
     char *unsignedPath = NULL;
     char *privateKeyPath = NULL;
     char *authDataPath = NULL;
+    int showHelp = 0;
     
     /* Parse args */
     int opt;
@@ -184,14 +194,56 @@ int main(int argc, const char * argv[]) {
             rawAarFlag = 1;
         } else if (opt == 'h') {
             /* Show help */
-            show_help();
-            return 0;
+            showHelp = 1;
         }
+    }
+    if (showHelp) {
+        if (SS_CMD_SIGN == ssCommand) {
+            printf("Usage: shortcut-sign sign --input <input> --output <output> --key <key> --auth <auth>\n\n");
+            printf("Example: shortcut-sign sign -i unsigned.shortcut -o signed.shortcut -k privateKey.bin -a authData.plist\n\n");
+            printf("Options:\n");
+            printf("-i, --input <input>    path to the unsigned shortcut\n");
+            printf("-o, --output <output>  path to output the signed shortcut\n");
+            printf("-k, --key <key>        path to raw X9.63 ECDSA-P256 key\n");
+            printf("-a, --auth <auth>      path to auth data plist for key\n\n");
+        } else if (SS_CMD_EXTRACT == ssCommand) {
+            printf("Usage: shortcut-sign extract --input <input> --output <output>\n\n");
+            printf("Example: shortcut-sign extract -i signed.shortcut -o unsigned.shortcut\n\n");
+            printf("Options:\n");
+            printf("-i, --input <input>    path to the signed shortcut\n");
+            printf("-o, --output <output>  path to output the unsigned shortcut\n\n");
+        } else if (SS_CMD_VERIFY == ssCommand) {
+            printf("Usage: shortcut-sign verify --input <input>\n\n");
+            printf("Example: shortcut-sign verify -i signed.shortcut\n\n");
+            printf("Options:\n");
+            printf("-i, --input <input>    path to the signed shortcut\n\n");
+        } else if (SS_CMD_AUTH_EXTRACT == ssCommand) {
+            printf("Usage: shortcut-sign auth --input <input> --output <output>\n\n");
+            printf("Example: shortcut-sign auth -i signed.shortcut -o auth.plist\n\n");
+            printf("Options:\n");
+            printf("-i, --input <input>    path to the signed shortcut\n");
+            printf("-o, --output <output>  path to output the auth data\n\n");
+        } else if (SS_CMD_RESIGN == ssCommand) {
+            printf("Usage: shortcut-sign resign --input <input> --output <output> --key <key>\n\n");
+            printf("Example: shortcut-sign resign -i signed.shortcut -o resigned.shortcut -k privateKey.bin\n\n");
+            printf("Options:\n");
+            printf("-i, --input <input>    path to the signed shortcut\n");
+            printf("-o, --output <output>  path to output the resigned shortcut\n");
+            printf("-k, --key <key>        path to raw X9.63 ECDSA-P256 key\n\n");
+        } else if (SS_CMD_INFO == ssCommand) {
+            printf("Usage: shortcut-sign info --input <input>\n\n");
+            printf("Example: shortcut-sign info -i signed.shortcut\n\n");
+            printf("Options:\n");
+            printf("-i, --input <input>    path to the signed shortcut\n\n");
+        } else {
+            show_help();
+        }
+        return 0;
     }
 
     /* SS_CMD_VERSION is the only command where inputPath is not needed */
     if (SS_CMD_VERSION == ssCommand) {
-        printf("1.0 Beta 4\n");
+        printf("1.0 Beta 5\n");
         return 0;
     }
     if (!inputPath) {
