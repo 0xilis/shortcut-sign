@@ -24,7 +24,7 @@
 #endif
 
 #if SUPPORT_LINUX_SANDBOXING
-#include <seccomp.h>
+#include <linux/seccomp.h>
 #include <sys/prctl.h>
 #endif
 
