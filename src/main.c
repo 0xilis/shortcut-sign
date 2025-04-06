@@ -25,7 +25,17 @@
 
 #if SUPPORT_LINUX_SANDBOXING
 #include <linux/seccomp.h>
+#include <linux/filter.h>
 #include <sys/prctl.h>
+#include <sys/syscall.h>
+
+static const int allowed_syscalls[] = {
+    SYS_read,
+    SYS_write,
+    SYS_open,
+    SYS_exit
+};
+#define ALLOWED_SYSCALL_COUNT (sizeof(allowed_syscalls) / sizeof(*allowed_syscalls))
 #endif
 
 #define OPTSTR "i:o:u:k:a:hvr"
@@ -134,46 +144,41 @@ __attribute__((visibility ("hidden"))) static uint8_t *malloc_binaryForExpansion
     return aeaShortcutArchive;
 }
 
+#if SUPPORT_LINUX_SANDBOXING
+static void set_filter(struct sock_filter *filter, uint16_t code, uint8_t jt, uint8_t jf, uint32_t k) {
+    filter->code = code;
+    filter->jt = jt;
+    filter->jf = jf;
+    filter->k = k;
+}
+static int set_seccomp_filter() {
+    int i, idx = 0;
+    struct sock_filter sockf[ALLOWED_SYSCALL_COUNT + 3];
+    struct sock_fprog prog = { .len = ALLOWED_SYSCALL_COUNT + 3, .filter = sockf };
 
+    set_filter(&sockf[idx++], BPF_LD + BPF_W + BPF_ABS, 0, 0, offsetof(struct seccomp_data, nr));
+
+    for (i = 0; i < ALLOWED_SYSCALL_COUNT; i++) {
+        set_filter(&sockf[idx++], BPF_JMP + BPF_JEQ + BPF_K, ALLOWED_SYSCALL_COUNT - i, 0, allowed_syscalls[i]);
+    }
+
+    set_filter(&sockf[idx++], BPF_RET + BPF_K, 0, 0, SECCOMP_RET_KILL);
+
+    /* Load the filter into the kernel using prctl */
+    if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &prog) < 0) {
+        fprintf(stderr,"shortcut-sign sandbox: prctl(PR_SET_SECCOMP) failed");
+        return -1;
+    }
+
+    return 0;
+}
+#endif
 
 int main(int argc, const char * argv[]) {
 #if SUPPORT_LINUX_SANDBOXING
 
-    scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_KILL); /* If alternative syscall, stop process */
-    if (ctx == NULL) {
-        fprintf(stderr,"shortcut-sign sandbox: seccomp_init failed");
-        return 1;
-    }
-
-    /* Allow open/read/write syscalls */
-    if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(open), 0) < 0) {
-        fprintf(stderr,"shortcut-sign sandbox: seccomp_rule_add failed for open");
-        seccomp_release(ctx);
-        return 1;
-    }
-
-    if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(read), 0) < 0) {
-        fprintf(stderr,"shortcut-sign sandbox: seccomp_rule_add failed for read");
-        seccomp_release(ctx);
-        return 1;
-    }
-
-    if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 0) < 0) {
-        fprintf(stderr,"shortcut-sign sandbox: seccomp_rule_add failed for write");
-        seccomp_release(ctx);
-        return 1;
-    }
-
-    if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(exit), 0) < 0) {
-        fprintf(stderr,"shortcut-sign sandbox: seccomp_rule_add failed for exit");
-        seccomp_release(ctx);
-        return 1;
-    }
-
-    /* Load the filter into the kernel */
-    if (seccomp_load(ctx) < 0) {
-        fprintf(stderr,"shortcut-sign sandbox: seccomp_load failed");
-        seccomp_release(ctx);
+    if (set_seccomp_filter() < 0) {
+        fprintf(stderr, "shortcut-sign sandbox: Failed to set seccomp filter\n");
         return 1;
     }
     
@@ -533,8 +538,5 @@ int main(int argc, const char * argv[]) {
         }
         print_shortcut_cert_info(signedShortcut, signedShortcutSize);
     }
-#if SUPPORT_LINUX_SANDBOXING
-    seccomp_release(ctx);
-#endif
     return 0;
 }
