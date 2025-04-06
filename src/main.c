@@ -5,6 +5,29 @@
 #include <libgen.h>
 #include <libshortcutsign.h>
 
+/*
+ * Linux provides the seccomp() syscall
+ * that makes shortcut-sign unable to do
+ * more syscalls than the ones we need. This
+ * is helpful for us as if someone ever
+ * gets code execution in shortcut-sign
+ * somehow, they will be restricted.
+ * Of course, this doesn't mean that they
+ * still won't be able to do no harm however,
+ * and this option is not supported on
+ * non-Linux (ex OS X, BSD, etc.)
+ */
+#ifndef SUPPORT_LINUX_SANDBOXING
+#if defined(linux) || defined(__linux__)
+#define SUPPORT_LINUX_SANDBOXING 1
+#endif
+#endif
+
+#if SUPPORT_LINUX_SANDBOXING
+#include <seccomp.h>
+#include <sys/prctl.h>
+#endif
+
 #define OPTSTR "i:o:u:k:a:hvr"
 
 struct option long_options[] = {
@@ -114,6 +137,48 @@ __attribute__((visibility ("hidden"))) static uint8_t *malloc_binaryForExpansion
 
 
 int main(int argc, const char * argv[]) {
+#if SUPPORT_LINUX_SANDBOXING
+
+    scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_KILL); /* If alternative syscall, stop process */
+    if (ctx == NULL) {
+        fprintf(stderr,"shortcut-sign sandbox: seccomp_init failed");
+        return 1;
+    }
+
+    /* Allow open/read/write syscalls */
+    if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(open), 0) < 0) {
+        fprintf(stderr,"shortcut-sign sandbox: seccomp_rule_add failed for open");
+        seccomp_release(ctx);
+        return 1;
+    }
+
+    if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(read), 0) < 0) {
+        fprintf(stderr,"shortcut-sign sandbox: seccomp_rule_add failed for read");
+        seccomp_release(ctx);
+        return 1;
+    }
+
+    if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 0) < 0) {
+        fprintf(stderr,"shortcut-sign sandbox: seccomp_rule_add failed for write");
+        seccomp_release(ctx);
+        return 1;
+    }
+
+    if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(exit), 0) < 0) {
+        fprintf(stderr,"shortcut-sign sandbox: seccomp_rule_add failed for exit");
+        seccomp_release(ctx);
+        return 1;
+    }
+
+    /* Load the filter into the kernel */
+    if (seccomp_load(ctx) < 0) {
+        fprintf(stderr,"shortcut-sign sandbox: seccomp_load failed");
+        seccomp_release(ctx);
+        return 1;
+    }
+    
+#endif
+
     if (argc < 2) {
         show_help();
         return 0;
@@ -468,5 +533,8 @@ int main(int argc, const char * argv[]) {
         }
         print_shortcut_cert_info(signedShortcut, signedShortcutSize);
     }
+#if SUPPORT_LINUX_SANDBOXING
+    seccomp_release(ctx);
+#endif
     return 0;
 }
