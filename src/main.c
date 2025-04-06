@@ -26,6 +26,8 @@ typedef enum {
     SS_CMD_RESIGN,
     SS_CMD_VERSION,
     SS_CMD_INFO,
+    SS_CMD_UPLOAD,
+    SS_CMD_SIGNIN,
 } SSCommand;
 
 void show_help(void) {
