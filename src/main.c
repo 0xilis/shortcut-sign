@@ -19,7 +19,7 @@
  */
 #ifndef SUPPORT_LINUX_SANDBOXING
 #if defined(linux) || defined(__linux__)
-#define SUPPORT_LINUX_SANDBOXING 1
+#define SUPPORT_LINUX_SANDBOXING 0
 #endif
 #endif
 
