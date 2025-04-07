@@ -225,7 +225,7 @@ int main(int argc, const char * argv[]) {
     }
     int rawAarFlag = 0;
     unsigned int i = 0;
-    for (i = 0; i < argc; i++) {
+    for (i = 2; i < argc; i++) {
         if (strncmp(argv[i], "-raw_aar", 8) == 0) {
             rawAarFlag = 1;
             /* Remove it from argv by shifting elements to the left */
