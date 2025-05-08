@@ -46,5 +46,6 @@ Contributions are welcome! Not just to the code, but also better documentation w
 
 - Write tests
 - Build CLI for more devices
+- Regenerate HKDF / HMAC keys each time when resigning
 - Once libNeoAppleArchive neo_aea_sign_* functions are complete, utilize those rather than piggybacking off of embeddedSignedData
 - Option to replicate identity services and fetch private key/cert/validation record over HTTPS from Apple ID, thus not requiring an Apple device to dump keys from. This is the most ambitious and will take the most time, and may not be done.
