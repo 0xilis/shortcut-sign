@@ -7,6 +7,10 @@ assignees: ''
 
 ---
 
+# Note
+
+This template for bug reports is not required for issue submissions. You are allowed to submit your issue in another form that does not comply with the template, rather it is just a guide of what to format the issue if you want.
+
 **Describe the bug**
 A clear and concise description of what the bug is.
 
