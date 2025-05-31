@@ -1,7 +1,7 @@
 Package: com.0xilis.shortcut-sign
 Name: shortcut-sign
 Depends: firmware (>= 7.0), com.0xilis.libshortcutsign, com.0xilis.libneoapplearchive
-Version: 0.0.2
+Version: 0.0.3
 Architecture: iphoneos-arm
 Description: Open-Source Signed Shortcut CLI tool
 Maintainer: Snoolie K
