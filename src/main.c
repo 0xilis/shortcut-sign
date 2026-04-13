@@ -321,6 +321,7 @@ int main(int argc, const char * argv[]) {
     if (!inputPath) {
         printf("No -i specified.\n");
         show_help();
+        return 0;
     }
     if (SS_CMD_EXTRACT == ssCommand) {
         if (!outputPath) {
