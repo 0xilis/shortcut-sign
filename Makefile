@@ -1,7 +1,7 @@
 buildDir = build
 CC = clang
 CFLAGS = -Os -std=c89 -Ibuild/lzfse/include -Ibuild/libzbitmap/include -Ilib/libshortcutsign
-LDFLAGS = -lNeoAppleArchive -llzfse -lzbitmap -lz -lssl -lcrypto -lplist-2.0
+LDFLAGS = -lNeoAppleArchive -llzfse -lzbitmap -lz -lssl -lcrypto -lplist-2.0 -L/opt/homebrew/opt/openssl@3/lib -L/opt/homebrew/opt/libplist/lib
 
 DEBUG ?= 0
 
