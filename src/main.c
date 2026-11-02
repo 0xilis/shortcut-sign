@@ -5,39 +5,6 @@
 #include <libgen.h>
 #include <libshortcutsign.h>
 
-/*
- * Linux provides the seccomp() syscall
- * that makes shortcut-sign unable to do
- * more syscalls than the ones we need. This
- * is helpful for us as if someone ever
- * gets code execution in shortcut-sign
- * somehow, they will be restricted.
- * Of course, this doesn't mean that they
- * still won't be able to do no harm however,
- * and this option is not supported on
- * non-Linux (ex OS X, BSD, etc.)
- */
-#ifndef SUPPORT_LINUX_SANDBOXING
-#if defined(linux) || defined(__linux__)
-#define SUPPORT_LINUX_SANDBOXING 0
-#endif
-#endif
-
-#if SUPPORT_LINUX_SANDBOXING
-#include <linux/seccomp.h>
-#include <linux/filter.h>
-#include <sys/prctl.h>
-#include <sys/syscall.h>
-
-static const int allowed_syscalls[] = {
-    SYS_read,
-    SYS_write,
-    SYS_open,
-    SYS_exit
-};
-#define ALLOWED_SYSCALL_COUNT (sizeof(allowed_syscalls) / sizeof(*allowed_syscalls))
-#endif
-
 #define OPTSTR "i:o:u:k:a:hvr"
 
 struct option long_options[] = {
@@ -144,45 +111,15 @@ __attribute__((visibility ("hidden"))) static uint8_t *malloc_binaryForExpansion
     return aeaShortcutArchive;
 }
 
-#if SUPPORT_LINUX_SANDBOXING
-static void set_filter(struct sock_filter *filter, uint16_t code, uint8_t jt, uint8_t jf, uint32_t k) {
-    filter->code = code;
-    filter->jt = jt;
-    filter->jf = jf;
-    filter->k = k;
-}
-static int set_seccomp_filter() {
-    int i, idx = 0;
-    struct sock_filter sockf[ALLOWED_SYSCALL_COUNT + 3];
-    struct sock_fprog prog = { .len = ALLOWED_SYSCALL_COUNT + 3, .filter = sockf };
-
-    set_filter(&sockf[idx++], BPF_LD + BPF_W + BPF_ABS, 0, 0, offsetof(struct seccomp_data, nr));
-
-    for (i = 0; i < ALLOWED_SYSCALL_COUNT; i++) {
-        set_filter(&sockf[idx++], BPF_JMP + BPF_JEQ + BPF_K, ALLOWED_SYSCALL_COUNT - i, 0, allowed_syscalls[i]);
-    }
-
-    set_filter(&sockf[idx++], BPF_RET + BPF_K, 0, 0, SECCOMP_RET_KILL);
-
-    /* Load the filter into the kernel using prctl */
-    if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &prog) < 0) {
-        fprintf(stderr,"shortcut-sign sandbox: prctl(PR_SET_SECCOMP) failed");
-        return -1;
-    }
-
-    return 0;
-}
-#endif
-
 int main(int argc, const char * argv[]) {
-#if SUPPORT_LINUX_SANDBOXING
 
-    if (set_seccomp_filter() < 0) {
-        fprintf(stderr, "shortcut-sign sandbox: Failed to set seccomp filter\n");
-        return 1;
-    }
-    
-#endif
+    /*
+     * TODO:
+     *
+     * Add OpenBSD pledge() calls for limiting syscalls
+     * for OpenBSD systems. Look into seccomp() Linux
+     * syscalls as well...
+     */
 
     if (argc < 2) {
         show_help();
@@ -315,7 +252,7 @@ int main(int argc, const char * argv[]) {
 
     /* SS_CMD_VERSION is the only command where inputPath is not needed */
     if (SS_CMD_VERSION == ssCommand) {
-        printf("1.0 Beta 5\n");
+        printf("1.0 Beta 6\n");
         return 0;
     }
     if (!inputPath) {
