@@ -35,7 +35,7 @@ void show_help(void) {
     printf("Commands:\n\n");
     printf(" sign: sign an unsigned shortcut.\n");
     printf(" extract: extract unsigned shortcut from a signed shortcut.\n");
-    printf(" verify: verify signature of signed shortcut. (currently only contact-signed)\n");
+    printf(" verify: verify signature of signed shortcut.\n");
     printf(" auth: extract auth data of shortcut\n");
     printf(" resign: resign a signed shortcut\n");
     printf(" info: log info about signed shortcut's signing chain\n");
